@@ -1,0 +1,51 @@
+[package]
+name = "wamrx-sys"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "Raw FFI bindings to the WebAssembly Micro Runtime (WAMR) fast interpreter."
+links = "iwasm"
+build = "build.rs"
+
+[lib]
+# The generated bindings are not doctested and contain no runnable examples.
+doctest = false
+
+[build-dependencies]
+bindgen = "0.70"
+cmake = "0.1"
+
+# Each feature maps 1:1 to a WAMR compile-time CMake toggle (see build.rs).
+# Only proposals/toggles that make sense for the *fast interpreter* are exposed;
+# the AOT/LLVM-JIT machinery is intentionally never enabled.
+[features]
+default = ["bulk-memory", "reference-types"]
+
+# --- Wasm proposals ---
+# NOTE: exception-handling, memory64 and multi-memory are deliberately absent:
+# WAMR does not support them together with the fast interpreter.
+bulk-memory = []
+reference-types = []
+tail-call = []
+simd = []
+gc = []
+shared-memory = []
+extended-const = []
+
+# --- Runtime / embedding toggles ---
+# Enable WAMR's hardware (signal-based) bound checking. Off by default because
+# it requires per-thread signal setup and is fragile on the main thread; the
+# software bounds-check path used otherwise is portable and thread-agnostic.
+hw-bound-check = []
+custom-name-section = []
+load-custom-section = []
+dump-call-stack = []
+multi-module = []
+thread-mgr = []
+perf-profiling = []
+
+# --- libc flavors (host imports); off by default ---
+libc-builtin = []
+libc-wasi = []
