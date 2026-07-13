@@ -1,0 +1,36 @@
+[package]
+name = "wamrx"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "Safe, Wasmi/Wasmtime-inspired Rust bindings for the WAMR fast interpreter."
+
+[dependencies]
+wamrx-sys = { workspace = true }
+
+[dev-dependencies]
+wat = "1"
+anyhow = "1"
+
+[features]
+default = ["bulk-memory", "reference-types"]
+
+# Pass-through features to `wamrx-sys` (WAMR compile-time toggles).
+bulk-memory = ["wamrx-sys/bulk-memory"]
+reference-types = ["wamrx-sys/reference-types"]
+tail-call = ["wamrx-sys/tail-call"]
+simd = ["wamrx-sys/simd"]
+gc = ["wamrx-sys/gc"]
+shared-memory = ["wamrx-sys/shared-memory"]
+extended-const = ["wamrx-sys/extended-const"]
+hw-bound-check = ["wamrx-sys/hw-bound-check"]
+custom-name-section = ["wamrx-sys/custom-name-section"]
+load-custom-section = ["wamrx-sys/load-custom-section"]
+dump-call-stack = ["wamrx-sys/dump-call-stack"]
+multi-module = ["wamrx-sys/multi-module"]
+thread-mgr = ["wamrx-sys/thread-mgr"]
+perf-profiling = ["wamrx-sys/perf-profiling"]
+libc-builtin = ["wamrx-sys/libc-builtin"]
+libc-wasi = ["wamrx-sys/libc-wasi"]
