@@ -55,15 +55,21 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    env:
+      RUST_BACKTRACE: 1
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - name: cargo test (default-features)
+      - name: Build Tests (default-features)
+        run: cargo build --workspace --verbose
+      - name: Test (default-features)
         run: cargo test --workspace
-      - name: cargo test (all-features)
+      - name: Build Tests (all-features)
+        run: cargo build --workspace --all-features --verbose
+      - name: Test (all-features)
         run: cargo test --workspace --all-features
 
   doc:
