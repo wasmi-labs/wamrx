@@ -1,10 +1,10 @@
 [workspace]
 members = ["crates/wamrx-sys", "crates/wamrx"]
-resolver = "2"
+resolver = "3"
 
 [workspace.package]
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 license = "Apache-2.0 WITH LLVM-exception"
 repository = "https://github.com/wasmi-labs/wamrx"
 authors = ["Robin Freyler"]
