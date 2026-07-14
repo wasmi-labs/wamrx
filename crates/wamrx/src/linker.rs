@@ -30,8 +30,8 @@ use crate::instance::Instance;
 use crate::module::Module;
 use crate::value::{FuncType, Val};
 use std::cell::RefCell;
-use std::ffi::{c_void, CString};
-use std::panic::{catch_unwind, AssertUnwindSafe};
+use std::ffi::{CString, c_void};
+use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::rc::Rc;
 use wamrx_sys as sys;
 

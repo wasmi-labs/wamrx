@@ -18,11 +18,7 @@ use std::{
 fn flag(feature: &str) -> &'static str {
     // Cargo exposes enabled features as `CARGO_FEATURE_<NAME>` with `-` -> `_`.
     let var = format!("CARGO_FEATURE_{}", feature.to_uppercase().replace('-', "_"));
-    if env::var_os(var).is_some() {
-        "1"
-    } else {
-        "0"
-    }
+    if env::var_os(var).is_some() { "1" } else { "0" }
 }
 
 /// Maps the Rust target arch (`CARGO_CFG_TARGET_ARCH`) to a `WAMR_BUILD_TARGET`.
