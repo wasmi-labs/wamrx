@@ -21,10 +21,10 @@ jobs:
           submodules: recursive
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - name: cargo check
+      - name: cargo check (default-features)
         run: cargo check --workspace --all-targets
-      - name: cargo check (wasi)
-        run: cargo check --workspace --all-targets --features wasi
+      - name: cargo check (all-features)
+        run: cargo check --workspace --all-targets --all-features
 
   fmt:
     runs-on: ubuntu-latest
@@ -48,10 +48,10 @@ jobs:
         with:
           components: clippy
       - uses: Swatinem/rust-cache@v2
-      - name: cargo clippy
+      - name: cargo clippy (default-features)
         run: cargo clippy --workspace --all-targets -- -D warnings
-      - name: cargo clippy (wasi)
-        run: cargo clippy --workspace --all-targets --features wasi -- -D warnings
+      - name: cargo clippy (all-features)
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
 
   test:
     runs-on: ubuntu-latest
@@ -61,10 +61,10 @@ jobs:
           submodules: recursive
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - name: cargo test
+      - name: cargo test (default-features)
         run: cargo test --workspace
-      - name: cargo test (wasi)
-        run: cargo test --workspace --features wasi
+      - name: cargo test (all-features)
+        run: cargo test --workspace --all-features
 
   doc:
     runs-on: ubuntu-latest
@@ -76,7 +76,7 @@ jobs:
           submodules: recursive
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - name: cargo doc
+      - name: cargo doc (default-features)
         run: cargo doc --workspace --no-deps --document-private-items
-      - name: cargo doc (wasi)
-        run: cargo doc --workspace --no-deps --document-private-items --features wasi
+      - name: cargo doc (all-features)
+        run: cargo doc --workspace --no-deps --document-private-items --all-features
