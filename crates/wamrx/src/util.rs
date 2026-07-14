@@ -29,8 +29,10 @@ pub(crate) fn cstr_buf_to_string(buf: &[c_char]) -> String {
 ///
 /// `ptr` must be null or point to a valid NUL-terminated C string.
 pub(crate) unsafe fn cstr_ptr_to_string(ptr: *const c_char) -> String {
-    if ptr.is_null() {
-        return String::new();
+    unsafe {
+        if ptr.is_null() {
+            return String::new();
+        }
+        std::ffi::CStr::from_ptr(ptr).to_string_lossy().into_owned()
     }
-    std::ffi::CStr::from_ptr(ptr).to_string_lossy().into_owned()
 }

@@ -184,40 +184,42 @@ impl Linker {
 /// per-function [`HostFuncCtx`] (types + Rust `fn`) travels via the
 /// `attachment` pointer.
 unsafe extern "C" fn raw_trampoline(exec_env: sys::wasm_exec_env_t, argv: *mut u64) {
-    let attachment = sys::wasm_runtime_get_function_attachment(exec_env);
-    if attachment.is_null() {
-        return;
-    }
-    // SAFETY: `attachment` is the `HostFuncCtx` we registered; it outlives every
-    // call because the owning `LinkerState` is kept alive by live instances.
-    let ctx = &*(attachment as *const HostFuncCtx);
-
-    // Decode one 64-bit slot per parameter.
-    let params: Vec<Val> = ctx
-        .ty
-        .params()
-        .iter()
-        .enumerate()
-        .map(|(i, &ty)| Val::from_raw_slot(ty, *argv.add(i)))
-        .collect();
-    let mut results: Vec<Val> = ctx.ty.results().iter().map(|t| t.default_value()).collect();
-
-    // Guard the FFI boundary: unwinding a panic across `extern "C"` is UB, so
-    // convert it into a Wasm trap instead.
-    let outcome = catch_unwind(AssertUnwindSafe(|| {
-        (ctx.func)(&params, &mut results);
-    }));
-
-    match outcome {
-        Ok(()) => {
-            if let Some(result) = results.first() {
-                *argv = result.to_raw_slot();
-            }
+    unsafe {
+        let attachment = sys::wasm_runtime_get_function_attachment(exec_env);
+        if attachment.is_null() {
+            return;
         }
-        Err(_) => {
-            let module_inst = sys::wasm_runtime_get_module_inst(exec_env);
-            let msg = CString::new("host function panicked").unwrap();
-            sys::wasm_runtime_set_exception(module_inst, msg.as_ptr());
+        // SAFETY: `attachment` is the `HostFuncCtx` we registered; it outlives every
+        // call because the owning `LinkerState` is kept alive by live instances.
+        let ctx = &*(attachment as *const HostFuncCtx);
+
+        // Decode one 64-bit slot per parameter.
+        let params: Vec<Val> = ctx
+            .ty
+            .params()
+            .iter()
+            .enumerate()
+            .map(|(i, &ty)| Val::from_raw_slot(ty, *argv.add(i)))
+            .collect();
+        let mut results: Vec<Val> = ctx.ty.results().iter().map(|t| t.default_value()).collect();
+
+        // Guard the FFI boundary: unwinding a panic across `extern "C"` is UB, so
+        // convert it into a Wasm trap instead.
+        let outcome = catch_unwind(AssertUnwindSafe(|| {
+            (ctx.func)(&params, &mut results);
+        }));
+
+        match outcome {
+            Ok(()) => {
+                if let Some(result) = results.first() {
+                    *argv = result.to_raw_slot();
+                }
+            }
+            Err(_) => {
+                let module_inst = sys::wasm_runtime_get_module_inst(exec_env);
+                let msg = CString::new("host function panicked").unwrap();
+                sys::wasm_runtime_set_exception(module_inst, msg.as_ptr());
+            }
         }
     }
 }
