@@ -135,4 +135,5 @@ Integration tests live in
 
 ## License
 
-Licensed under `Apache-2.0 WITH LLVM-exception`.
+Licensed under either of [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE) at your
+option. (`wamrx-sys` and WAMR itself are Apache-2.0-licensed.)
