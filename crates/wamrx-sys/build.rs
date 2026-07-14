@@ -58,8 +58,17 @@ fn main() {
         wamr_root.display(),
     );
 
-    build_wamr(&wamr_root);
-    generate_bindings(&wamr_root);
+    // On docs.rs the crate source tree is mounted read-only, but WAMR's
+    // version.cmake writes core/version.h back into it, which aborts the CMake
+    // build with a read-only filesystem error. `cargo doc` never links, so the
+    // static libiwasm.a is unnecessary there — generate only the bindgen
+    // bindings and skip the C build (and its link directives).
+    if env::var_os("DOCS_RS").is_some() {
+        generate_bindings(&wamr_root);
+    } else {
+        build_wamr(&wamr_root);
+        generate_bindings(&wamr_root);
+    }
 
     println!("cargo:rerun-if-changed=wrapper.h");
     println!("cargo:rerun-if-changed=build.rs");
@@ -69,6 +78,9 @@ fn main() {
         "WAMR_BUILD_PLATFORM",
         "WAMR_BUILD_TARGET",
         "WAMR_SHARED_PLATFORM_CONFIG",
+        // Toggling DOCS_RS flips whether we build/link the native library, so
+        // the script must rerun (and re-emit link directives) when it changes.
+        "DOCS_RS",
     ] {
         println!("cargo:rerun-if-env-changed={var}");
     }
