@@ -22,12 +22,7 @@ required** to build them; just `cmake` and a C compiler.
   `Engine` / `Module` / `Linker` / `Instance` / `Func` / `Global`, plus the
   value types `Val` / `ValType` / `FuncType` / `GlobalType` / `Mutability`.
 
-It is designed to be plugged into [`wasmi-labs/wasmi-benchmarks`] by
-implementing that project's runtime traits, but has no dependency on it and can
-be used on its own.
-
 [`bindgen`]: https://github.com/rust-lang/rust-bindgen
-[`wasmi-labs/wasmi-benchmarks`]: https://github.com/wasmi-labs/wasmi-benchmarks
 
 ## Requirements & first-time setup
 
