@@ -18,9 +18,12 @@ license.workspace = true
 include = [
     "wasm-micro-runtime/core/**/*",
     "wasm-micro-runtime/LICENSE",
+    "wasm-micro-runtime/CMakeLists.txt",
+    "wasm-micro-runtime/build-scripts/**",
     "src/**/*",
     "build.rs",
     "Cargo.toml",
+    "wrapper.h",
 ]
 
 [lib]
