@@ -1,13 +1,27 @@
 [package]
 name = "wamrx-sys"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
-repository.workspace = true
-authors.workspace = true
 description = "Raw FFI bindings to the WebAssembly Micro Runtime (WAMR) fast interpreter."
+keywords = ["wasm", "webassembly", "wasm3", "interpreter", "ffi"]
+categories = ["external-ffi-bindings"]
 links = "iwasm"
 build = "build.rs"
+version.workspace = true
+rust-version.workspace = true
+documentation = "https://docs.rs/wamrx-sys/"
+authors.workspace = true
+repository.workspace = true
+edition.workspace = true
+readme.workspace = true
+license.workspace = true
+# Ship the vendored C sources (plus our shim and Wasm3's license) so the crate
+# builds without the git submodule.
+include = [
+    "wasm-micro-runtime/core/**/*",
+    "wasm-micro-runtime/LICENSE",
+    "src/**/*",
+    "build.rs",
+    "Cargo.toml",
+]
 
 [lib]
 # The generated bindings are not doctested and contain no runnable examples.

@@ -1,11 +1,16 @@
 [package]
 name = "wamrx"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
-repository.workspace = true
-authors.workspace = true
 description = "Safe, Wasmi/Wasmtime-inspired Rust bindings for the WAMR fast interpreter."
+keywords = ["wasm", "webassembly", "wasm3", "interpreter", "sandbox"]
+categories = ["wasm", "api-bindings"]
+version.workspace = true
+rust-version.workspace = true
+documentation = "https://docs.rs/wamrx/"
+authors.workspace = true
+repository.workspace = true
+edition.workspace = true
+readme.workspace = true
+license.workspace = true
 
 [dependencies]
 wamrx-sys = { workspace = true }
