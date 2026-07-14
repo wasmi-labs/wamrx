@@ -14,7 +14,7 @@ build = "build.rs"
 doctest = false
 
 [build-dependencies]
-bindgen = "0.70"
+bindgen = "0.72"
 cmake = "0.1"
 
 # Each feature maps 1:1 to a WAMR compile-time CMake toggle (see build.rs).
