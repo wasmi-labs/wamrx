@@ -5,10 +5,11 @@ use crate::error::{Error, Result};
 use crate::func::Func;
 use crate::global::Global;
 use crate::linker::LinkerState;
+use crate::memory::Memory;
 use crate::module::Module;
 use crate::util::with_error_buf;
 use crate::value::{Mutability, ValType};
-use std::ffi::CString;
+use std::ffi::{CStr, CString};
 use std::rc::Rc;
 use wamrx_sys as sys;
 
@@ -104,6 +105,51 @@ impl Instance {
             Mutability::Const
         };
         Ok(Global::new(content, mutability, raw.global_data))
+    }
+
+    /// Looks up the exported linear memory named `name`.
+    ///
+    /// Returns [`Error::MemoryNotFound`] if no exported memory has that name.
+    pub fn get_memory(&self, name: &str) -> Result<Memory<'_>> {
+        // WAMR's `wasm_runtime_lookup_memory` ignores `name` with multi-memory
+        // off (it returns the sole memory), so validate the export name here.
+        if !self.has_exported_memory(name) {
+            return Err(Error::MemoryNotFound(name.to_string()));
+        }
+        let cname = CString::new(name).map_err(|_| Error::MemoryNotFound(name.to_string()))?;
+        // SAFETY: `module_inst` is live; `cname` is a valid C string.
+        let inst = unsafe { sys::wasm_runtime_lookup_memory(self.module_inst, cname.as_ptr()) };
+        if inst.is_null() {
+            return Err(Error::MemoryNotFound(name.to_string()));
+        }
+        // The declared page limits come from the module's own bytes: WAMR
+        // rewrites its in-memory type for non-growing modules (folding pages
+        // into `num_bytes_per_page` and setting init = max = 1), so its runtime
+        // structures no longer carry the declared min/max. At most one memory
+        // exists (multi-memory is unsupported), so its parsed type applies.
+        let ty = self
+            ._module
+            .memory_type()
+            .ok_or_else(|| Error::MemoryNotFound(name.to_string()))?;
+        Ok(Memory::new(inst, ty))
+    }
+
+    /// Returns whether the module exports a memory named `name`. Export names
+    /// remain reliable even though WAMR rewrites the memory's page limits.
+    fn has_exported_memory(&self, name: &str) -> bool {
+        let module = self._module.raw();
+        // SAFETY: `module` is a live module handle owned by this instance.
+        let count = unsafe { sys::wasm_runtime_get_export_count(module) };
+        (0..count).any(|i| {
+            let mut export: sys::wasm_export_t = unsafe { core::mem::zeroed() };
+            // SAFETY: `module` is live; `i` is in `0..count`; `export` is a
+            // valid out-pointer.
+            unsafe { sys::wasm_runtime_get_export_type(module, i, &mut export) };
+            // SAFETY: `export.name` is a valid, NUL-terminated C string owned by
+            // the module.
+            export.kind == sys::WASM_IMPORT_EXPORT_KIND_MEMORY
+                && unsafe { CStr::from_ptr(export.name) }.to_bytes() == name.as_bytes()
+        })
     }
 
     pub(crate) fn module_inst(&self) -> sys::wasm_module_inst_t {

@@ -3,7 +3,8 @@
 //! functions dispatched through the raw trampoline, and trap handling.
 
 use wamrx::{
-    Engine, Error, FuncType, GlobalType, InstanceConfig, Linker, Module, Mutability, Val, ValType,
+    Engine, Error, FuncType, GlobalType, InstanceConfig, Linker, MemoryType, Module, Mutability,
+    Val, ValType,
 };
 
 /// Loads `wat`, instantiates with an empty linker, and returns the instance.
@@ -304,6 +305,99 @@ fn exported_globals_get_set_and_type() {
     assert!(matches!(
         instance.get_global("nope"),
         Err(Error::GlobalNotFound(_))
+    ));
+}
+
+#[test]
+fn exported_memory_data_size_and_type() {
+    let instance = instantiate(
+        r#"(module
+            (memory (export "mem") 1 2)
+            (func (export "load") (param i32) (result i32) local.get 0 i32.load)
+            (func (export "store") (param i32 i32) local.get 0 local.get 1 i32.store))"#,
+    );
+
+    // Declared type: minimum 1 page, explicit maximum 2 pages.
+    let mut mem = instance.get_memory("mem").unwrap();
+    assert_eq!(mem.ty(), MemoryType::new(1, Some(2)));
+    assert_eq!(mem.size(), 1);
+    assert_eq!(mem.data().len(), 64 * 1024);
+
+    // Host write via `data_mut` is visible to Wasm: store 42 (little-endian) at
+    // offset 0, then read it back through the exported `load`.
+    mem.data_mut()[0..4].copy_from_slice(&42i32.to_le_bytes());
+    let mut r = [Val::I32(0)];
+    instance
+        .get_func("load")
+        .unwrap()
+        .call(&[Val::I32(0)], &mut r)
+        .unwrap();
+    assert_eq!(r[0], Val::I32(42));
+
+    // Wasm write via `store` is visible to the host through `data`.
+    instance
+        .get_func("store")
+        .unwrap()
+        .call(&[Val::I32(8), Val::I32(99)], &mut [])
+        .unwrap();
+    let mem = instance.get_memory("mem").unwrap();
+    assert_eq!(
+        i32::from_le_bytes(mem.data()[8..12].try_into().unwrap()),
+        99
+    );
+}
+
+#[test]
+fn multi_page_memory_reports_true_page_count() {
+    // A 2-page memory: WAMR folds a non-growing memory into one oversized page
+    // (num_bytes_per_page = 131072), so `size` must be recovered from bytes.
+    let instance = instantiate(r#"(module (memory (export "mem") 2 4))"#);
+    let mem = instance.get_memory("mem").unwrap();
+    assert_eq!(mem.ty(), MemoryType::new(2, Some(4)));
+    assert_eq!(mem.size(), 2);
+    assert_eq!(mem.data().len(), 2 * 64 * 1024);
+}
+
+#[test]
+fn growable_memory_size_tracks_growth() {
+    // Containing `memory.grow` keeps WAMR from folding the memory, exercising
+    // the non-collapsed path; `size` must reflect the post-grow page count.
+    let instance = instantiate(
+        r#"(module
+            (memory (export "mem") 1 3)
+            (func (export "grow") (param i32) (result i32) local.get 0 memory.grow))"#,
+    );
+    let mem = instance.get_memory("mem").unwrap();
+    assert_eq!(mem.ty(), MemoryType::new(1, Some(3)));
+    assert_eq!(mem.size(), 1);
+
+    let mut r = [Val::I32(0)];
+    instance
+        .get_func("grow")
+        .unwrap()
+        .call(&[Val::I32(1)], &mut r)
+        .unwrap();
+    assert_eq!(r[0], Val::I32(1)); // previous page count
+
+    let mem = instance.get_memory("mem").unwrap();
+    assert_eq!(mem.size(), 2);
+    assert_eq!(mem.data().len(), 2 * 64 * 1024);
+}
+
+#[test]
+fn memory_without_declared_maximum_has_none() {
+    let instance = instantiate(r#"(module (memory (export "m") 1))"#);
+    let mem = instance.get_memory("m").unwrap();
+    assert_eq!(mem.ty(), MemoryType::new(1, None));
+    assert_eq!(mem.ty().maximum(), None);
+}
+
+#[test]
+fn missing_memory_is_error() {
+    let instance = instantiate(r#"(module (memory (export "m") 1))"#);
+    assert!(matches!(
+        instance.get_memory("absent"),
+        Err(Error::MemoryNotFound(_))
     ));
 }
 

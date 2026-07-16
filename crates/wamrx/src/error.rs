@@ -27,6 +27,8 @@ pub enum Error {
     },
     /// No exported global with the requested name was found.
     GlobalNotFound(String),
+    /// No exported memory with the requested name was found.
+    MemoryNotFound(String),
     /// Attempted to set an immutable (`const`) global.
     GlobalImmutable,
     /// A value's type did not match the expected type.
@@ -56,6 +58,7 @@ impl core::fmt::Display for Error {
                 )
             }
             Error::GlobalNotFound(name) => write!(f, "exported global not found: {name}"),
+            Error::MemoryNotFound(name) => write!(f, "exported memory not found: {name}"),
             Error::GlobalImmutable => write!(f, "cannot set an immutable global"),
             Error::TypeMismatch { expected, provided } => {
                 write!(f, "type mismatch: expected {expected}, provided {provided}")

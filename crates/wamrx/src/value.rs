@@ -224,6 +224,34 @@ impl GlobalType {
     }
 }
 
+/// The type of a Wasm linear memory: its page limits.
+///
+/// Page counts are in units of Wasm pages (64 KiB each), matching the module's
+/// declared limits rather than the byte length of the live data.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub struct MemoryType {
+    minimum: u64,
+    maximum: Option<u64>,
+}
+
+impl MemoryType {
+    /// Creates a new [`MemoryType`] from its minimum and optional maximum page
+    /// counts.
+    pub fn new(minimum: u64, maximum: Option<u64>) -> Self {
+        Self { minimum, maximum }
+    }
+
+    /// Returns the minimum number of Wasm pages.
+    pub fn minimum(&self) -> u64 {
+        self.minimum
+    }
+
+    /// Returns the optional maximum number of Wasm pages.
+    pub fn maximum(&self) -> Option<u64> {
+        self.maximum
+    }
+}
+
 /// The signature of a Wasm function: its parameter and result types.
 ///
 /// Mirrors the shape used by `wasmi`/`wasmtime` for easy interoperation.
