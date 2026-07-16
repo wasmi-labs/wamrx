@@ -8,9 +8,9 @@ rust-version = "1.85"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/wasmi-labs/wamrx"
 authors = ["Robin Freyler <robinfreyler@web.de>"]
-version = "0.2.0"
+version = "0.3.0"
 documentation = "https://docs.rs/wamrx-sys/"
 readme = "README.md"
 
 [workspace.dependencies]
-wamrx-sys = { version = "0.2.0", path = "crates/wamrx-sys" }
+wamrx-sys = { version = "0.3.0", path = "crates/wamrx-sys" }
